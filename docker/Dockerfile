@@ -1,4 +1,4 @@
-FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
+FROM nvidia/cuda:12.3.1-base-ubuntu20.04
 MAINTAINER Bei Peng
 
 # CUDA includes
@@ -16,14 +16,23 @@ RUN apt-get update -y && apt-get install software-properties-common -y && \
 RUN apt-get update -y && apt-get install -y curl libssl-dev openssl libopenblas-dev \
     libhdf5-dev hdf5-helpers hdf5-tools libhdf5-serial-dev libprotobuf-dev protobuf-compiler git
 
+
+
 #Install python3 pip3
 RUN apt-get update
 RUN add-apt-repository ppa:deadsnakes/ppa -y
-RUN apt-get update && apt-get install -y python3.6 python3.6-dev
+
+# Install python3-distutils
+RUN apt-get install -y python3.6-distutils
+
+RUN apt-get update && apt-get install -y python3.6 python3.6-dev python3.6-full
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2
 RUN apt-get install -y python3-pip
-RUN pip3 install --upgrade pip
+RUN #pip3 install --upgrade pip
 RUN apt-get install -y python-apt --reinstall
+# Install distutils for Python 3.6
+RUN python3.6 -m pip install setuptools
+
 RUN pip3 install numpy scipy pyyaml matplotlib
 RUN pip3 install imageio
 RUN pip3 install tensorboard-logger
@@ -48,7 +57,7 @@ RUN pip3 install Jinja2
 #### install mujoco
 #### -------------------------------------------------------------------
 RUN apt install -y libosmesa6-dev libgl1-mesa-glx libglfw3
-RUN ln -s /usr/lib/x86_64-linux-gnu/libGL.so.1 /usr/lib/x86_64-linux-gnu/libGL.so
+RUN ln -sf /usr/lib/x86_64-linux-gnu/libGL.so.1 /usr/lib/x86_64-linux-gnu/libGL.so
 RUN apt install -y unzip patchelf
 RUN yes | pip3 uninstall enum34
 
@@ -61,7 +70,7 @@ RUN mkdir -p .mujoco \
     && mv .mujoco/mujoco200_linux .mujoco/mujoco200
 
 # Make sure you have a license key, otherwise comment it out
-COPY ./mujoco_key.txt .mujoco/mjkey.txt
+#COPY ./mujoco_key.txt .mujoco/mjkey.txt
 
 ENV LD_LIBRARY_PATH /home/user/.mujoco/mujoco200/bin:${LD_LIBRARY_PATH}
 
@@ -71,7 +80,7 @@ ENV MUJOCO_PY_MUJOCO_PATH /home/user/.mujoco/mujoco200
 RUN pip3 install --user mujoco-py
 RUN echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/user/.mujoco/mujoco200/bin" >> ~/.bashrc
 RUN echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/user/.mujoco/mujoco200/bin" >> ~/.profile
-RUN python3 -c "import mujoco_py"
+RUN #python3 -c "import mujoco_py"
 
 # set python path
 RUN echo "export PYTHONPATH=/home/user/pymarl" >> ~/.bashrc
@@ -81,9 +90,11 @@ RUN pip3 install --user gym==0.10.8
 
 ## -- SMAC --
 # Change the smac_ver to make sure the newest smac is installed when rebuilding the docker image
-ENV smac_ver 1
-RUN pip3 install git+https://github.com/oxwhirl/smac.git
+#ENV smac_ver 2
+#RUN pip3 install git+https://github.com/oxwhirl/smac.git
 ENV SC2PATH /home/user/pymarl/3rdparty/StarCraftII
+#RUN git clone https://github.com/oxwhirl/smac.git
+#RUN pip install -e smac/
 
 EXPOSE 8888
 WORKDIR /home/user/pymarl
